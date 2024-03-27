@@ -1,0 +1,22 @@
+Public Async Function StraT() As Task
+    For PortsList = 0 To MDPing.MPSDeL.PortListMain.Length - 1
+        EndPoints(PortsList) = New IPEndPoint(PortAddress, Int32.Parse(MDPing.MPSDeL.PortListMain(PortsList)))
+        PortSockets(PortsList) = New Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+        PortSockets(PortsList).Bind(EndPoints(PortsList))
+        PortSockets(PortsList).Listen(20)
+        Me.MainSocket_F = PortSockets(PortsList)
+        Me.MainSocket_F.SendTimeout = -1
+        Me.MainSocket_F.ReceiveTimeout = -1
+        Me.MainSocket_F.SendBufferSize = 50 * 1024
+        Me.MainSocket_F.ReceiveBufferSize = 50 * 1024
+        ThreadPool.SetMinThreads(250, 250)
+        ThreadPool.SetMaxThreads(250, 250)
+        Try
+            Dim TSocketAsyncArgs As SocketAsyncEventArgs = New SocketAsyncEventArgs()
+            AddHandler TSocketAsyncArgs.Completed, AddressOf AcceptAsyncr
+            Await Task.Factory.StartNew(Function() AcceptAsyncr(Me.MainSocket_F, TSocketAsyncArgs))
+            Await Task.Factory.StartNew(Function() WorkAllClients())
+        Catch ex As Exception
+        End Try
+    Next
+End Function
